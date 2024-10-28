@@ -104,8 +104,8 @@ const ajoutPerso = () => {
                 <td class="text-center ">${element.date}</td>
                 <td class="text-center ">${element.email}</td>
                 <td width="20%" class="text-center" d-flex justify-content-between >
-                    <button onclick="supprimerPerso('${i}')" class="btn btn-outline-danger btn-sm ">X</button>
-                    <button onclick="modifPerso('${i}')" class="btn btn-outline-danger btn-sm ">0</button>
+                    <button onclick="supprimerPerso('${i}')" class="btn btn-outline-danger btn-sm ">✂</button>
+                    <button onclick="modifPerso('${i}')" class="btn btn-outline-danger btn-sm ">✏</button>
                 </td>
             </tr>
         `;
