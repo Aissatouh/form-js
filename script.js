@@ -2,16 +2,31 @@ const prenom = document.getElementById("pre");
 const nom = document.getElementById("nom");
 const date = document.getElementById("date");
 const email = document.getElementById("email");
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-const isValidDate = (date) => /\d{4}-\d{2}-\d{2}/.test(date);
+const list = document.getElementById("list");
 let editingIndex = null;
-
-
 let tabPersonnes = [];
 
 /**
+ * Validation de l'email
+ */
+const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+/**
+ * Validation de la date de naissance (ne doit pas être dans le futur)
+ */
+const isValidDate = (date) => {
+    const selectedDate = new Date(date);
+    const today = new Date();
+    return selectedDate <= today;
+};
+
+/**
+ * Validation des champs nom et prénom (lettres uniquement)
+ */
+const isValidName = (name) => /^[a-zA-Z]+$/.test(name);
+
+/**
  * Récupère et retourne les valeurs des champs de formulaire.
- * @returns {Object} Un objet contenant les valeurs des champs 'nom', 'prenom', 'date', et 'email'.
  */
 const getFormValues = () => {
     return {
@@ -22,44 +37,48 @@ const getFormValues = () => {
     };
 };
 
-
 /**
- * Génère une adresse email basée sur les valeurs du prénom, nom, et date de naissance.
- * L'email est créé sous le format : première lettre du prénom + nom + année de naissance + "@sonatel.com".
- * Si les champs requis ne sont pas remplis, une alerte demande à l'utilisateur de remplir les champs.
+ * Génère un email basé sur le prénom, nom, et date de naissance.
  */
 const generer = () => {
     const { nomValue, prenomValue, dateValue } = getFormValues();
-    if (nomValue !== "" && prenomValue !== "" && dateValue !== "") {
+    if (nomValue && prenomValue && dateValue) {
+        if (!isValidName(nomValue) || !isValidName(prenomValue)) {
+            alert("Le prénom et le nom doivent contenir uniquement des lettres.");
+            return;
+        }
+        if (!isValidDate(dateValue)) {
+            alert("La date de naissance ne peut pas être dans le futur.");
+            return;
+        }
         const emailValue = prenomValue[0] + nomValue + dateValue.split("-")[0] + "@sonatel.com";
         email.value = emailValue.toLowerCase();
     } else {
-        alert("Veuillez remplir tous les champs svp");
+        alert("Veuillez remplir tous les champs.");
     }
 };
 
-
 /**
- * Enregistre une personne dans le tableau `tabPersonnes` si tous les champs sont remplis.
- * Chaque personne est enregistrée sous la forme d'un objet contenant 'prenom', 'nom', 'date', et 'email'.
- * Après l'enregistrement, les champs du formulaire sont vidés et la liste des personnes est mise à jour.
- * Si un champ est manquant, une alerte est affichée.
+ * Enregistre une personne dans le tableau `tabPersonnes` si tous les champs sont remplis et valides.
  */
-
-
-
-
-
 const enregistrer = () => {
     const { nomValue, prenomValue, dateValue, emailValue } = getFormValues();
 
     if (nomValue && prenomValue && dateValue && emailValue) {
-        const personnes = {
-            prenom: prenomValue,
-            nom: nomValue,
-            date: dateValue,
-            email: emailValue
-        };
+        if (!isValidName(nomValue) || !isValidName(prenomValue)) {
+            alert("Le prénom et le nom doivent contenir uniquement des lettres.");
+            return;
+        }
+        if (!isValidDate(dateValue)) {
+            alert("La date de naissance ne peut pas être dans le futur.");
+            return;
+        }
+        if (!isValidEmail(emailValue)) {
+            alert("Veuillez entrer un email valide.");
+            return;
+        }
+
+        const personnes = { prenom: prenomValue, nom: nomValue, date: dateValue, email: emailValue };
 
         if (editingIndex !== null) {
             tabPersonnes[editingIndex] = personnes;
@@ -76,10 +95,8 @@ const enregistrer = () => {
     }
 };
 
-
-
 /**
- * Vide tous les champs du formulaire : 'prenom', 'nom', 'date', et 'email'.
+ * Vide tous les champs du formulaire.
  */
 const viderChamps = () => {
     prenom.value = "";
@@ -88,24 +105,22 @@ const viderChamps = () => {
     email.value = "";
 };
 
-
 /**
- * Met à jour l'affichage de la liste des personnes enregistrées dans le tableau `tabPersonnes`.
- * Chaque personne est affichée dans un tableau HTML avec un bouton pour supprimer cette personne.
+ * Met à jour l'affichage de la liste des personnes enregistrées.
  */
 const ajoutPerso = () => {
     list.innerHTML = "";
     tabPersonnes.forEach((element, i) => {
         let trElement = `
             <tr>
-                <td class="text-center ">${i + 1}</td>
-                <td class="text-center ">${element?.prenom || ''}</td>
-                <td class="text-center ">${element.nom}</td>
-                <td class="text-center ">${element.date}</td>
-                <td class="text-center ">${element.email}</td>
-                <td width="20%" class="text-center" d-flex justify-content-between >
-                    <button onclick="supprimerPerso('${i}')" class="btn btn-outline-danger btn-sm ">✂</button>
-                    <button onclick="modifPerso('${i}')" class="btn btn-outline-danger btn-sm ">✏</button>
+                <td class="text-center">${i + 1}</td>
+                <td class="text-center">${element.prenom}</td>
+                <td class="text-center">${element.nom}</td>
+                <td class="text-center">${element.date}</td>
+                <td class="text-center">${element.email}</td>
+                <td width="20%" class="text-center">
+                    <button onclick="supprimerPerso('${i}')" class="btn btn-outline-danger btn-sm">✂</button>
+                    <button onclick="modifPerso('${i}')" class="btn btn-outline-info btn-sm">✏</button>
                 </td>
             </tr>
         `;
@@ -113,12 +128,8 @@ const ajoutPerso = () => {
     });
 };
 
-
 /**
  * Supprime une personne du tableau `tabPersonnes` à l'index donné.
- * @param {number} position - L'index de la personne à supprimer dans le tableau.
- * Demande une confirmation à l'utilisateur avant la suppression.
- * Après suppression, la liste des personnes est mise à jour.
  */
 const supprimerPerso = (position) => {
     if (confirm("Voulez-vous supprimer cette personne ?")) {
@@ -126,24 +137,24 @@ const supprimerPerso = (position) => {
         ajoutPerso();
     }
 };
-const modifPerso = (index) =>{
-     //Recuperer la personne a modifier dans le tableau
-     const p = tabPersonnes[index];
-     //Charger les elements au niveau du formulaire
-     prenom.value = p.prenom;
-     nom.value = p.nom;
-     date.value = p.date;
-     email.value = p.email;
-     editingIndex = index;
-    
-    
-    
-}
 
+/**
+ * Prépare le formulaire pour modifier une personne.
+ */
+const modifPerso = (index) => {
+    const p = tabPersonnes[index];
+    prenom.value = p.prenom;
+    nom.value = p.nom;
+    date.value = p.date;
+    email.value = p.email;
+    editingIndex = index;
+};
 
+/**
+ * Affiche la section sélectionnée et cache les autres.
+ */
 const showSection = (sectionId) => {
     document.getElementById("home").style.display = "none";
     document.getElementById("info").style.display = "none";
-    // Affiche la section sélectionnée
     document.getElementById(sectionId).style.display = "block";
 };
