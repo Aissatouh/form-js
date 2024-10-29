@@ -80,13 +80,16 @@ const enregistrer = () => {
 
         const personnes = { prenom: prenomValue, nom: nomValue, date: dateValue, email: emailValue };
 
+        // Utilisation de map pour créer une nouvelle version du tableau modifié
         if (editingIndex !== null) {
-            tabPersonnes[editingIndex] = personnes;
+            tabPersonnes = tabPersonnes.map((personne, index) =>
+                index === editingIndex ? personnes : personne
+            );
             editingIndex = null;
         } else {
-            tabPersonnes.push(personnes);
+            tabPersonnes = [...tabPersonnes, personnes]; // Ajout de la personne avec spread operator
         }
-        
+
         console.table(tabPersonnes);
         viderChamps();
         ajoutPerso();
@@ -94,6 +97,7 @@ const enregistrer = () => {
         alert("Tous les champs sont obligatoires.");
     }
 };
+
 
 /**
  * Vide tous les champs du formulaire.
@@ -109,9 +113,8 @@ const viderChamps = () => {
  * Met à jour l'affichage de la liste des personnes enregistrées.
  */
 const ajoutPerso = () => {
-    list.innerHTML = "";
-    tabPersonnes.forEach((element, i) => {
-        let trElement = `
+    list.innerHTML = tabPersonnes
+        .map((element, i) => `
             <tr>
                 <td class="text-center">${i + 1}</td>
                 <td class="text-center">${element.prenom}</td>
@@ -123,10 +126,10 @@ const ajoutPerso = () => {
                     <button onclick="modifPerso('${i}')" class="btn btn-outline-info btn-sm">✏</button>
                 </td>
             </tr>
-        `;
-        list.innerHTML += trElement;
-    });
+        `)
+        .join(""); // Utilisation de join pour transformer le tableau en chaîne
 };
+
 
 /**
  * Supprime une personne du tableau `tabPersonnes` à l'index donné.
